@@ -1,0 +1,78 @@
+"""petrichor command-line interface."""
+
+import argparse
+import csv
+from datetime import date
+from pathlib import Path
+
+from tabulate import tabulate
+
+from .balance import decide, simulate
+from .config import load_config
+from .weather import fetch_daily, split_past_forecast
+
+FORECAST_RAIN_WINDOW_DAYS = 2
+
+
+def run(config_path, log_path):
+    cfg = load_config(config_path)
+    loc = cfg["location"]
+
+    days = fetch_daily(
+        loc["latitude"],
+        loc["longitude"],
+        timezone=loc.get("timezone", "auto"),
+    )
+    today = date.today().isoformat()
+    past, forecast = split_past_forecast(days, today)
+    forecast_rain_mm = sum(
+        d["precipitation_mm"] for d in forecast[:FORECAST_RAIN_WINDOW_DAYS]
+    )
+
+    rows = []
+    for zone in cfg["zones"]:
+        series = [(d["et0_mm"], d["precipitation_mm"]) for d in past]
+        deficits = simulate(0.0, series, zone["field_capacity_mm"])
+        deficit = deficits[-1] if deficits else 0.0
+        verdict = decide(deficit, zone["water_threshold_mm"], forecast_rain_mm)
+        rows.append(
+            {
+                "date": today,
+                "zone": zone["name"],
+                "deficit_mm": round(deficit, 1),
+                "rain_next_2d_mm": round(forecast_rain_mm, 1),
+                "verdict": verdict,
+            }
+        )
+
+    _append_log(log_path, rows)
+    print(tabulate(rows, headers="keys", tablefmt="github"))
+    print(f"\nLog appended to {log_path}")
+
+
+def _append_log(log_path, rows):
+    log_path = Path(log_path)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not log_path.exists()
+    with log_path.open("a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        if write_header:
+            writer.writeheader()
+        writer.writerows(rows)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="petrichor",
+        description="Know when not to water — a soil water balance for your garden.",
+    )
+    parser.add_argument("--config", default="plants.yaml", help="path to plants.yaml")
+    parser.add_argument(
+        "--log", default="data/watering_log.csv", help="path to the watering log CSV"
+    )
+    args = parser.parse_args()
+    run(args.config, args.log)
+
+
+if __name__ == "__main__":
+    main()

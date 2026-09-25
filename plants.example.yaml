@@ -1,0 +1,16 @@
+# Copy this file to plants.yaml and edit it to match your garden.
+location:
+  latitude: 52.52      # Berlin — replace with your garden's coordinates
+  longitude: 13.405
+  timezone: auto       # Open-Meteo resolves local time automatically
+
+zones:
+  - name: tomatoes
+    field_capacity_mm: 40     # max soil water deficit the zone can store
+    water_threshold_mm: 20    # water when the deficit exceeds this
+  - name: lawn
+    field_capacity_mm: 50
+    water_threshold_mm: 30
+  - name: succulents
+    field_capacity_mm: 25
+    water_threshold_mm: 22
