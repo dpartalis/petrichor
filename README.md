@@ -102,6 +102,10 @@ To use your own garden in Actions, track `plants.yaml` (for example with
 `git add -f plants.yaml`) or edit the workflow's config path. On a public
 repository, tracking the config also publishes its coordinates.
 
+## Contributing
+
+This project uses a lightweight Conventional Commits style — see `COMMITS.md`.
+
 ## Tests
 
 ```bash
