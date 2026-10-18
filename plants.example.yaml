@@ -8,9 +8,12 @@ zones:
   - name: tomatoes
     field_capacity_mm: 40     # max soil water deficit the zone can store
     water_threshold_mm: 20    # water when the deficit exceeds this
+    crop_coefficient: 1.15    # crop-specific ET0 multiplier (Kc)
   - name: lawn
     field_capacity_mm: 50
     water_threshold_mm: 30
+    crop_coefficient: 0.8
   - name: succulents
     field_capacity_mm: 25
     water_threshold_mm: 22
+    crop_coefficient: 0.3

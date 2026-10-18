@@ -9,12 +9,14 @@ from tabulate import tabulate
 
 from .balance import decide, simulate
 from .config import load_config
+from .delta import append_delta
 from .weather import fetch_daily, split_past_forecast
 
 FORECAST_RAIN_WINDOW_DAYS = 2
+DEFAULT_DELTA_PATH = "data/watering_log_delta"
 
 
-def run(config_path, log_path):
+def run(config_path, log_path, delta_path=None):
     cfg = load_config(config_path)
     loc = cfg["location"]
 
@@ -32,7 +34,12 @@ def run(config_path, log_path):
     rows = []
     for zone in cfg["zones"]:
         series = [(d["et0_mm"], d["precipitation_mm"]) for d in past]
-        deficits = simulate(0.0, series, zone["field_capacity_mm"])
+        deficits = simulate(
+            0.0,
+            series,
+            zone["field_capacity_mm"],
+            crop_coefficient=zone.get("crop_coefficient", 1.0),
+        )
         deficit = deficits[-1] if deficits else 0.0
         verdict = decide(deficit, zone["water_threshold_mm"], forecast_rain_mm)
         rows.append(
@@ -46,8 +53,12 @@ def run(config_path, log_path):
         )
 
     _append_log(log_path, rows)
+    if delta_path:
+        append_delta(delta_path, rows)
     print(tabulate(rows, headers="keys", tablefmt="github"))
     print(f"\nLog appended to {log_path}")
+    if delta_path:
+        print(f"Delta table appended to {delta_path}")
 
 
 def _append_log(log_path, rows):
@@ -70,8 +81,15 @@ def main():
     parser.add_argument(
         "--log", default="data/watering_log.csv", help="path to the watering log CSV"
     )
+    parser.add_argument(
+        "--delta",
+        nargs="?",
+        const=DEFAULT_DELTA_PATH,
+        metavar="PATH",
+        help=f"also append to a Delta table (default: {DEFAULT_DELTA_PATH})",
+    )
     args = parser.parse_args()
-    run(args.config, args.log)
+    run(args.config, args.log, args.delta)
 
 
 if __name__ == "__main__":

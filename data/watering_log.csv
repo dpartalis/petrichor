@@ -1,0 +1,13 @@
+date,zone,deficit_mm,rain_next_2d_mm,verdict
+2026-09-25,tomatoes,29.3,0.0,WATER
+2026-09-25,lawn,29.3,0.0,OK
+2026-09-25,succulents,25,0.0,WATER
+2026-10-01,tomatoes,25.3,0.0,WATER
+2026-10-01,lawn,25.3,0.0,OK
+2026-10-01,succulents,25,0.0,WATER
+2026-10-18,tomatoes,7.5,0.0,OK
+2026-10-18,lawn,4.4,0.0,OK
+2026-10-18,succulents,0.0,0.0,OK
+2026-10-18,tomatoes,7.5,0.0,OK
+2026-10-18,lawn,4.4,0.0,OK
+2026-10-18,succulents,0.0,0.0,OK

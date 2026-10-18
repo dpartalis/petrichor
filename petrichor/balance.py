@@ -1,8 +1,8 @@
 """Core soil water-balance model (pure functions, no I/O).
 
-The "bucket model": soil has a water deficit that grows with
-evapotranspiration (ET0) and shrinks with precipitation. The deficit
-is clamped between 0 (soil fully replenished) and field capacity
+The "bucket model": soil has a water deficit that grows with crop-adjusted
+evapotranspiration (ET0 × crop coefficient) and shrinks with precipitation.
+The deficit is clamped between 0 (soil fully replenished) and field capacity
 (the maximum amount of water the soil can hold for plants).
 """
 
@@ -11,13 +11,19 @@ def clamp(value, lo, hi):
     return max(lo, min(value, hi))
 
 
-def update_deficit(prev_deficit, et0_mm, precipitation_mm, field_capacity_mm):
+def update_deficit(
+    prev_deficit,
+    et0_mm,
+    precipitation_mm,
+    field_capacity_mm,
+    crop_coefficient=1.0,
+):
     """Advance the deficit by one day."""
-    deficit = prev_deficit + et0_mm - precipitation_mm
+    deficit = prev_deficit + et0_mm * crop_coefficient - precipitation_mm
     return clamp(deficit, 0.0, field_capacity_mm)
 
 
-def simulate(initial_deficit, daily, field_capacity_mm):
+def simulate(initial_deficit, daily, field_capacity_mm, crop_coefficient=1.0):
     """Run the bucket model over a series of days.
 
     `daily` is an iterable of (et0_mm, precipitation_mm) tuples.
@@ -26,7 +32,13 @@ def simulate(initial_deficit, daily, field_capacity_mm):
     deficits = []
     deficit = initial_deficit
     for et0_mm, precipitation_mm in daily:
-        deficit = update_deficit(deficit, et0_mm, precipitation_mm, field_capacity_mm)
+        deficit = update_deficit(
+            deficit,
+            et0_mm,
+            precipitation_mm,
+            field_capacity_mm,
+            crop_coefficient,
+        )
         deficits.append(deficit)
     return deficits
 

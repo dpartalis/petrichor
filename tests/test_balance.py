@@ -1,3 +1,5 @@
+import pytest
+
 from petrichor.balance import decide, simulate, update_deficit
 
 
@@ -8,6 +10,16 @@ def test_heavy_rain_zeroes_deficit():
 def test_dry_week_grows_deficit():
     deficits = simulate(0.0, [(4.0, 0.0)] * 7, field_capacity_mm=40)
     assert deficits[-1] == 28.0
+
+
+def test_crop_coefficient_scales_evapotranspiration():
+    deficits = simulate(
+        0.0,
+        [(4.0, 0.0)] * 7,
+        field_capacity_mm=40,
+        crop_coefficient=1.15,
+    )
+    assert deficits[-1] == pytest.approx(32.2)
 
 
 def test_deficit_clamped_at_field_capacity():
