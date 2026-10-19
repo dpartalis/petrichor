@@ -12,6 +12,8 @@ from . import __version__
 from .balance import decide, simulate
 from .config import load_config
 from .delta import append_delta
+from .events import DEFAULT_EVENTS_PATH, append_event, apply_events, load_events
+from .notify import find_flips, send_ntfy
 from .report import load_log, summarize
 from .weather import fetch_daily, split_past_forecast
 
@@ -19,7 +21,7 @@ FORECAST_RAIN_WINDOW_DAYS = 2
 DEFAULT_DELTA_PATH = "data/watering_log_delta"
 
 
-def run(config_path, log_path, delta_path=None):
+def run(config_path, log_path, delta_path=None, events_path=DEFAULT_EVENTS_PATH):
     cfg = load_config(config_path)
     loc = cfg["location"]
 
@@ -33,10 +35,11 @@ def run(config_path, log_path, delta_path=None):
     forecast_rain_mm = sum(
         d["precipitation_mm"] for d in forecast[:FORECAST_RAIN_WINDOW_DAYS]
     )
+    events = load_events(events_path)
 
     rows = []
     for zone in cfg["zones"]:
-        series = [(d["et0_mm"], d["precipitation_mm"]) for d in past]
+        series = apply_events(past, events, zone["name"])
         deficits = simulate(
             0.0,
             series,
@@ -55,6 +58,11 @@ def run(config_path, log_path, delta_path=None):
             }
         )
 
+    previous_rows = (
+        load_log(log_path=log_path).to_dict(orient="records")
+        if Path(log_path).exists()
+        else []
+    )
     _append_log(log_path, rows)
     if delta_path:
         append_delta(delta_path, rows)
@@ -62,6 +70,14 @@ def run(config_path, log_path, delta_path=None):
     print(f"\nLog appended to {log_path}")
     if delta_path:
         print(f"Delta table appended to {delta_path}")
+
+    notify = cfg.get("notify")
+    if notify:
+        flipped = find_flips(previous_rows, rows)
+        if flipped and send_ntfy(
+            notify["topic"], "petrichor: time to water", ", ".join(flipped)
+        ):
+            print(f"Notification sent (ntfy.sh/{notify['topic']})")
 
 
 def _append_log(log_path, rows):
@@ -79,6 +95,9 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     if argv[:1] == ["report"]:
         report(argv[1:])
+        return
+    if argv[:1] == ["water"]:
+        water(argv[1:])
         return
     parser = argparse.ArgumentParser(
         prog="petrichor",
@@ -98,8 +117,48 @@ def main(argv=None):
         metavar="PATH",
         help=f"also append to a Delta table (default: {DEFAULT_DELTA_PATH})",
     )
+    parser.add_argument(
+        "--events",
+        default=DEFAULT_EVENTS_PATH,
+        help=f"path to the watering events CSV (default: {DEFAULT_EVENTS_PATH})",
+    )
     args = parser.parse_args(argv)
-    run(args.config, args.log, args.delta)
+    run(args.config, args.log, args.delta, args.events)
+
+
+def water(argv):
+    parser = argparse.ArgumentParser(
+        prog="petrichor water",
+        description="Record a watering event for a zone.",
+    )
+    parser.add_argument("zone", help="name of the zone you watered")
+    parser.add_argument(
+        "--mm",
+        type=float,
+        metavar="AMOUNT",
+        help="amount of water in mm (default: the zone's field_capacity_mm — a full soak)",
+    )
+    parser.add_argument("--config", default="plants.yaml", help="path to plants.yaml")
+    parser.add_argument(
+        "--events",
+        default=DEFAULT_EVENTS_PATH,
+        help=f"path to the watering events CSV (default: {DEFAULT_EVENTS_PATH})",
+    )
+    args = parser.parse_args(argv)
+
+    cfg = load_config(args.config)
+    zones = {z["name"]: z for z in cfg["zones"]}
+    if args.zone not in zones:
+        raise SystemExit(
+            f"Unknown zone {args.zone!r} — zones in {args.config}: "
+            f"{', '.join(sorted(zones))}"
+        )
+    amount = (
+        args.mm if args.mm is not None else zones[args.zone]["field_capacity_mm"]
+    )
+    today = date.today().isoformat()
+    append_event(args.events, today, args.zone, amount)
+    print(f"Recorded {amount:g} mm on {args.zone} ({today}).")
 
 
 def report(argv):

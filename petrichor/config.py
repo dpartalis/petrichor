@@ -26,5 +26,19 @@ def load_config(path):
             raise ValueError(
                 f"Zone {zone.get('name')!r} is missing keys: {sorted(missing)}"
             )
+        kc = zone.get("crop_coefficient")
+        if kc is not None and (
+            not isinstance(kc, (int, float)) or isinstance(kc, bool) or kc <= 0
+        ):
+            raise ValueError(
+                f"Zone {zone.get('name')!r}: crop_coefficient must be a number > 0."
+            )
+
+    notify = cfg.get("notify")
+    if notify is not None:
+        if not isinstance(notify, dict) or not isinstance(
+            notify.get("topic"), str
+        ) or not notify["topic"].strip():
+            raise ValueError("'notify' requires a non-empty 'topic' string.")
 
     return cfg
