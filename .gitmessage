@@ -1,0 +1,10 @@
+# <type>(<scope>): <imperative summary, ≤72 chars, no period>
+#
+# Types:   feat | fix | docs | test | refactor | chore
+# Scopes:  cli | balance | weather | config | storage | report | action | deps
+#
+# Body (optional): what & why, not how. One or two sentences.
+# Footer: BREAKING CHANGE: ... / closes #123
+#
+# Versioning: feat → minor bump, fix → patch, BREAKING CHANGE → minor (pre-1.0).
+# See COMMITS.md for the full convention.
