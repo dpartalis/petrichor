@@ -7,6 +7,7 @@ from pathlib import Path
 
 from tabulate import tabulate
 
+from . import __version__
 from .balance import decide, simulate
 from .config import load_config
 from .delta import append_delta
@@ -78,6 +79,9 @@ def main():
         description="Know when not to water — a soil water balance for your garden.",
     )
     parser.add_argument("--config", default="plants.yaml", help="path to plants.yaml")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
     parser.add_argument(
         "--log", default="data/watering_log.csv", help="path to the watering log CSV"
     )

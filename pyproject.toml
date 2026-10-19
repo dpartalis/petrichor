@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "petrichor"
-version = "0.2.0"
 description = "A CLI that knows when not to water — soil water balance for your garden, powered by free weather data."
+dynamic = ["version"]
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -26,3 +26,6 @@ petrichor = "petrichor.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["petrichor*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "petrichor.__version__" }
