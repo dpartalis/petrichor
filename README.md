@@ -93,6 +93,16 @@ history = DeltaTable("data/watering_log_delta").to_pandas()
 first_run = DeltaTable("data/watering_log_delta", version=0).to_pandas()
 ```
 
+## Season report
+
+`report` summarizes the watering log per zone — how many days were logged,
+how often each zone needed water, and the latest deficit and verdict:
+
+```bash
+petrichor report           # read data/watering_log.csv
+petrichor report --delta   # read the Delta table instead
+```
+
 ## Daily GitHub Action
 
 `.github/workflows/daily.yml` runs at 05:17 UTC every morning and can also be

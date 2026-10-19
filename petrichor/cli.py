@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from . import __version__
 from .balance import decide, simulate
 from .config import load_config
 from .delta import append_delta
+from .report import load_log, summarize
 from .weather import fetch_daily, split_past_forecast
 
 FORECAST_RAIN_WINDOW_DAYS = 2
@@ -73,7 +75,11 @@ def _append_log(log_path, rows):
         writer.writerows(rows)
 
 
-def main():
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["report"]:
+        report(argv[1:])
+        return
     parser = argparse.ArgumentParser(
         prog="petrichor",
         description="Know when not to water — a soil water balance for your garden.",
@@ -92,8 +98,35 @@ def main():
         metavar="PATH",
         help=f"also append to a Delta table (default: {DEFAULT_DELTA_PATH})",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     run(args.config, args.log, args.delta)
+
+
+def report(argv):
+    parser = argparse.ArgumentParser(
+        prog="petrichor report",
+        description="Summarize the watering log per zone.",
+    )
+    parser.add_argument(
+        "--log", default="data/watering_log.csv", help="path to the watering log CSV"
+    )
+    parser.add_argument(
+        "--delta",
+        nargs="?",
+        const=DEFAULT_DELTA_PATH,
+        metavar="PATH",
+        help=f"read the Delta table instead of the CSV (default: {DEFAULT_DELTA_PATH})",
+    )
+    args = parser.parse_args(argv)
+    try:
+        frame = load_log(
+            log_path=None if args.delta else args.log, delta_path=args.delta
+        )
+    except FileNotFoundError:
+        raise SystemExit(
+            f"No watering log found at {args.delta or args.log} — run petrichor first."
+        )
+    print(tabulate(summarize(frame), headers="keys", tablefmt="github"))
 
 
 if __name__ == "__main__":
