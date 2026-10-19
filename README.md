@@ -1,5 +1,7 @@
 # petrichor
 
+![Daily watering check](https://github.com/dpartalis/petrichor/actions/workflows/daily.yml/badge.svg)
+
 *pe·tri·chor — the smell of earth after rain.*
 
 **Know when *not* to water.** A tiny CLI that runs a FAO-style soil water
