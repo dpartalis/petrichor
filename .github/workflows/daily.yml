@@ -48,5 +48,5 @@ jobs:
             echo "No log changes to commit."
             exit 0
           fi
-          git commit -m "Update watering logs"
+          git commit -m "chore(log): daily water balance"
           git push origin "HEAD:${GITHUB_REF_NAME}"
