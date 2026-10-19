@@ -103,6 +103,35 @@ petrichor report           # read data/watering_log.csv
 petrichor report --delta   # read the Delta table instead
 ```
 
+## Recording watering
+
+The balance model only sees weather by default. When you actually water a
+zone, record it so the deficit stays honest:
+
+```bash
+petrichor water tomatoes          # a full soak (the zone's field_capacity_mm)
+petrichor water tomatoes --mm 10  # a specific amount
+```
+
+Events are appended to `data/watering_events.csv` and count exactly like rain
+on that date in the next run.
+
+## Notifications
+
+Add a `notify` section to `plants.yaml` and petrichor posts to
+[ntfy.sh](https://ntfy.sh) (free, no account) when a zone *flips* to WATER —
+once per flip, not every day:
+
+```yaml
+notify:
+  topic: my-unguessable-garden-topic
+```
+
+Subscribe to the topic in the ntfy app or browser to receive the alerts. The
+daily GitHub Action sends them too, since it runs with the committed config.
+On a public repository the topic name is visible — pick an unguessable one,
+since anyone who knows it can publish to it.
+
 ## Daily GitHub Action
 
 `.github/workflows/daily.yml` runs at 05:17 UTC every morning and can also be

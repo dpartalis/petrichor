@@ -17,3 +17,7 @@ zones:
     field_capacity_mm: 25
     water_threshold_mm: 22
     crop_coefficient: 0.3
+
+# Optional: get a push notification via ntfy.sh when a zone flips to WATER.
+# notify:
+#   topic: my-unguessable-garden-topic

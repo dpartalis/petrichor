@@ -1,5 +1,53 @@
 # Release notes
 
+## 0.3.0 — 2026-10-19
+
+This release closes the loop between advice and action: watering events feed
+back into the balance model, and petrichor can now push a notification when a
+zone flips to WATER. Existing configurations and commands remain compatible.
+
+### Watering events
+
+- Added `petrichor water <zone>` to record an actual watering in
+  `data/watering_events.csv`.
+- Events count exactly like rain on that date in the bucket model, so the
+  deficit no longer drifts when you water.
+- `--mm AMOUNT` records a specific amount; the default is the zone's
+  `field_capacity_mm` (a full soak).
+
+```powershell
+python -m petrichor water tomatoes
+python -m petrichor water tomatoes --mm 10
+```
+
+### Notifications
+
+- Added an optional `notify` config section: petrichor posts one message to an
+  ntfy.sh topic when a zone's verdict flips to WATER (no repeated nagging
+  while it stays thirsty).
+- The daily GitHub Action sends notifications too — it runs with the
+  committed `plants.yaml`.
+- On a public repository the topic name is visible; pick an unguessable one.
+
+```yaml
+notify:
+  topic: my-unguessable-garden-topic
+```
+
+### Also in this release
+
+- Config now validates `crop_coefficient` (number > 0) and the `notify`
+  section.
+- Test coverage grew from 13 to 30 tests (events, notifications, config).
+
+### Upgrade
+
+```powershell
+python -m pip install -r .\requirements.txt
+```
+
+No configuration migration is required; both features are opt-in.
+
 ## 0.2.0 — 2026-10-18
 
 This release adds Delta Lake history, crop-specific evapotranspiration, and automated daily watering-log updates. Existing YAML configurations and CSV-only commands remain compatible.
