@@ -92,3 +92,6 @@ date,zone,deficit_mm,rain_next_2d_mm,verdict
 2026-11-11,tomatoes,4.4,0.0,OK
 2026-11-11,lawn,3.1,0.0,OK
 2026-11-11,succulents,1.2,0.0,OK
+2026-11-12,tomatoes,3.8,0.1,OK
+2026-11-12,lawn,2.7,0.1,OK
+2026-11-12,succulents,1.0,0.1,OK
